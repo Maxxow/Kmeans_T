@@ -1,0 +1,31 @@
+
+# Virtual Environments
+.ply/
+venv/
+env/
+.env
+
+# Datasets (Too large for GitHub)
+datasets/
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+
+# Database (Do not upload local DB)
+db.sqlite3
+
+# Collected Static Files (Generated on deployment)
+staticfiles/
+
+# Jupyter Notebooks (Optional - exclude if not needed)
+*.ipynb
+.ipynb_checkpoints/
+
+# Other unnecessary folders/files
+docs/
+fraud_api/
+fraud_spam_app/
+graficacion/
+Examen.md
