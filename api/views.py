@@ -3,26 +3,35 @@ import os
 import json
 import base64
 import io
-import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg') # Set backend before importing pyplot
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
-from sklearn.neighbors import KNeighborsClassifier
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
 
+# Lazy loading helper
+def get_plt():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    return plt
+
 def get_plot_base64(fig):
+    plt = get_plt()
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', facecolor='#1e293b') # Match dark theme card bg
+    fig.savefig(buf, format='png', bbox_inches='tight', facecolor='#1e293b')
     buf.seek(0)
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
     return img_str
 
 def index(request):
+    # Heavy imports moved inside to prevent OOM on worker boot
+    import pandas as pd
+    import numpy as np
+    from sklearn.cluster import KMeans
+    from sklearn.neighbors import KNeighborsClassifier
+    
+    plt = get_plt()
+
     # Default clusters
     n_clusters = int(request.GET.get('n_clusters', 6))
     

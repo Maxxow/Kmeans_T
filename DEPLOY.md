@@ -63,3 +63,4 @@ model = joblib.load('path/to/kmeans_6_clusters.joblib')
 ## Troubleshooting
 - **Static Files 404**: Ensure `whitenoise` is configured in `MIDDLEWARE` and `STATICFILES_STORAGE`.
 - **Port Error**: Render/Railway set the `$PORT` environment variable automatically; `gunicorn` respects this.
+- **Memory Error / SIGKILL**: If the app crashes on startup (Exit Code 137), it's likely running out of RAM (Free tiers often have 512MB). We moved heavy imports (`sklearn`, `pandas`) inside the view function to fix this. If it persists, you may need a paid tier or to reduce the dataset size.
