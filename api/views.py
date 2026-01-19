@@ -19,7 +19,22 @@ def index(request):
             data = json.load(f)
             # Use user input for the UI label to simulate "dynamic" behavior
             context['n_clusters'] = user_n_clusters
-            context['counts'] = data.get('counts', {})
+            
+            # Calculate percentages
+            counts_dict = data.get('counts', {})
+            total = sum(counts_dict.values())
+            cluster_stats = []
+            for cid, count in counts_dict.items():
+                pct = (count / total * 100) if total > 0 else 0
+                cluster_stats.append({
+                    'id': cid,
+                    'count': count,
+                    'pct': round(pct, 2)
+                })
+            # Sort numerically if possible
+            cluster_stats.sort(key=lambda x: int(x['id']) if x['id'].isdigit() else x['id'])
+            
+            context['cluster_stats'] = cluster_stats
             
     return render(request, 'api/index.html', context)
 

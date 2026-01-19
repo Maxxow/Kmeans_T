@@ -235,19 +235,21 @@
                         <tr>
                             <th>ID del Cluster</th>
                             <th>Cantidad</th>
+                            <th>Porcentaje</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if counts %}
-                        {% for cluster_id, count in counts.items %}
+                        {% if cluster_stats %}
+                        {% for cluster in cluster_stats %}
                         <tr>
-                            <td>Cluster {{ cluster_id }}</td>
-                            <td>{{ count }}</td>
+                            <td>Cluster {{ cluster.id }}</td>
+                            <td>{{ cluster.count }}</td>
+                            <td>{{ cluster.pct }}%</td>
                         </tr>
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="2">No hay datos disponibles. Ejecuta el script de generación.</td>
+                            <td colspan="3">No hay datos disponibles. Ejecuta el script de generación.</td>
                         </tr>
                         {% endif %}
                     </tbody>
