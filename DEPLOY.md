@@ -1,68 +1,90 @@
+# Guía de Despliegue - Sistema de Detección (Tumor y Emociones)
 
-# Deployment Guide
+Esta guía detalla los pasos necesarios para ejecutar y desplegar la aplicación Django que incluye el sistema de Detección de Tumores y Análisis de Emociones.
 
-This guide explains how to deploy the `fraud_detection` application to a free hosting service.
+## Requisitos Previos
 
-## Prerequisites
-- **GitHub Account**: To host the code.
-- **Render / Railway Account**: To host the live application.
-- **Git Installed**.
+- Sistema Operativo: Linux (Recomendado)
+- Python 3.8+
+- Bibliotecas necesarias (listadas en los imports, se recomienda un entorno virtual)
 
-## 1. Prepare Repository
+El proyecto ya cuenta con un entorno virtual configurado en `.ply`.
 
-Initialize a Git repository and push your code to GitHub.
+## Pasos para Ejecutar (Entorno Local/Desarrollo)
+
+### 1. Activar el Entorno Virtual
+
+Es fundamental usar el entorno virtual `.ply` que contiene las dependencias instaladas (Django, Pillow, joblib, scikit-learn, etc).
 
 ```bash
-# Initialize git
-git init
-
-# Add all files
-git add .
-
-# Commit
-git commit -m "Initial commit - Fraud Detection App"
-
-# Create a new repository on GitHub and link it
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-git branch -M main
-git push -u origin main
+source .ply/bin/activate
 ```
 
-## 2. Deploy to Render (Free Tier)
+### 2. Entrenar el Modelo de Detección de Tumores
 
-Render is recommended for its simplicity and free web service tier.
+Si no se ha generado el archivo `tumor_model.joblib` o se desea reentrenar:
 
-1.  Log in to [Render Dashboard](https://dashboard.render.com/).
-2.  Click **New +** -> **Web Service**.
-3.  Connect your GitHub repository.
-4.  Configure the service:
-    - **Name**: `fraud-detection`
-    - **Runtime**: `Python 3`
-    - **Build Command**: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
-    - **Start Command**: `gunicorn fraud_detection.wsgi`
-5.  Click **Create Web Service**.
-
-## 3. Deploy to Railway (Alternative)
-
-1.  Log in to [Railway](https://railway.app/).
-2.  Click **New Project** -> **Deploy from GitHub repo**.
-3.  Select your repository.
-4.  Railway will automatically detect the `Procfile` and `requirements.txt`.
-5.  It should deploy automatically.
-
-## 4. Verify Model Existence
-
-The trained model is located at `api/static/api/assets/kmeans_6_clusters.joblib`.
-You can load it in your code using:
-```python
-import joblib
-model = joblib.load('path/to/kmeans_6_clusters.joblib')
+```bash
+python scripts/train_tumor_model.py
 ```
-(Note: Since this app currently serves static assets, the model file is available as a static file downloaded to the server).
+*Este paso generará el archivo `tumor_model.joblib` en la raíz del proyecto.*
 
-## Troubleshooting
-- **Static Files 404**: Ensure `whitenoise` is configured in `MIDDLEWARE` and `STATICFILES_STORAGE`.
-- **Port Error**: Render/Railway set the `$PORT` environment variable automatically; `gunicorn` respects this.
-- **Static Files 404**: Ensure `whitenoise` is configured in `MIDDLEWARE` and `STATICFILES_STORAGE`.
-- **Port Error**: Render/Railway set the `$PORT` environment variable automatically; `gunicorn` respects this.
-- **Memory Usage**: The app is now fully static (images are pre-generated), so it uses very little RAM. It is safe for all free tiers.
+### 3. Verificar Archivos Estáticos y Migraciones
+
+Asegúrese de que la base de datos y los archivos estáticos estén listos:
+
+```bash
+python manage.py migrate
+python manage.py collectstatic --noinput
+```
+
+### 4. Iniciar el Servidor de Desarrollo
+
+Para ejecutar la aplicación localmente en el puerto 8000:
+
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
+*Ahora puede acceder a la aplicación en `http://localhost:8000/` o desde su navegador.*
+
+---
+
+## Despliegue en Producción (Básico)
+
+Para un entorno más robusto (ej. servidor VPS), no se debe usar `runserver`. Se recomienda usar **Gunicorn**.
+
+### 1. Instalar Gunicorn (si no está instalado)
+
+```bash
+pip install gunicorn
+```
+
+### 2. Ejecutar con Gunicorn
+
+Ejecute la aplicación utilizando Gunicorn como servidor WSGI:
+
+```bash
+gunicorn fraud_detection.wsgi:application --bind 0.0.0.0:8000
+```
+
+### 3. Notas de Configuración (`settings.py`)
+
+Antes de pasar a producción real, asegúrese de editar `fraud_detection/settings.py`:
+
+- **DEBUG**: Cambiar a `False`.
+  ```python
+  DEBUG = False
+  ```
+- **ALLOWED_HOSTS**: Añadir la IP o dominio del servidor.
+  ```python
+  ALLOWED_HOSTS = ['midominio.com', '192.168.1.100']
+  ```
+
+---
+
+## Estructura de URLs
+
+- `/`: **Detección de Tumores** (Página Principal)
+- `/emotion/`: **Análisis de Emociones**
+- `/api/predict_tumor`: Endpoint API para predicción de tumores.
+- `/api/predict_emotion`: Endpoint API para predicción de emociones (Mock).

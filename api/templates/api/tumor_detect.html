@@ -1,0 +1,367 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detección de Tumores Cerebrales IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --success: #4ade80;
+            --danger: #f87171;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 1.5rem 0;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        nav {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: var(--accent);
+        }
+
+        h1 {
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            margin: 2rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.05);
+            transform: scale(1.01);
+        }
+
+        .preview-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .image-box {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+
+        .image-box h3 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        .image-container-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .image-box img {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Overlay Style */
+        .mask-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.4;
+            pointer-events: none;
+            border-radius: 0.5rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--accent), #3b82f6);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+            box-shadow: 0 10px 20px -5px rgba(56, 189, 248, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(56, 189, 248, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .has-tumor {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .no-tumor {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Deteccion Emociones/Tumores</h1>
+        <nav>
+            <a href="/" class="active">Tumor Cerebral</a>
+            <a href="/emotion">Análisis de Emociones</a>
+            <!-- <a href="/fraud">Detección de Fraude</a> -->
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Detección de Tumores por RM</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Sube una Resonancia Magnética para detectar
+                anomalías y visualizar regiones de interés.</p>
+
+            <form id="upload-form">
+                <label for="file-input" class="upload-area" id="drop-zone">
+                    <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">Clic para subir o arrastrar imagen</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-secondary);">Soporta JPG, PNG,
+                        TIF</p>
+                    <input type="file" id="file-input" name="image" accept="image/*" required>
+                </label>
+
+                <div class="preview-container">
+                    <!-- Original Image -->
+                    <div class="image-box" id="original-box">
+                        <h3>Imagen Original</h3>
+                        <div class="image-container-wrapper">
+                            <img id="preview-image" alt="RM Original">
+                        </div>
+                    </div>
+
+                    <!-- Overlay Visualization -->
+                    <div class="image-box" id="overlay-box">
+                        <h3>Análisis de Calor (Superpuesto)</h3>
+                        <div class="image-container-wrapper">
+                            <img id="overlay-base-image" alt="Base">
+                            <img id="overlay-mask-image" class="mask-overlay" alt="Mascara">
+                        </div>
+                    </div>
+
+                    <!-- Pure Mask -->
+                    <div class="image-box" id="mask-box">
+                        <h3>Máscara de Segmentación</h3>
+                        <div class="image-container-wrapper">
+                            <img id="mask-image" alt="Mascara Segmentada">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result" class="result-box"></div>
+
+                <button type="submit" id="analyze-btn" style="display: none;">Analizar Imagen</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+
+        const previewImage = document.getElementById('preview-image');
+        const overlayBaseImage = document.getElementById('overlay-base-image');
+        const overlayMaskImage = document.getElementById('overlay-mask-image');
+        const maskImage = document.getElementById('mask-image');
+
+        const originalBox = document.getElementById('original-box');
+        const overlayBox = document.getElementById('overlay-box');
+        const maskBox = document.getElementById('mask-box');
+
+        const resultBox = document.getElementById('result');
+        const analyzeBtn = document.getElementById('analyze-btn');
+
+        // Image Preview
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const src = e.target.result;
+                    previewImage.src = src;
+                    overlayBaseImage.src = src;
+
+                    originalBox.style.display = 'block';
+                    overlayBox.style.display = 'none';
+                    maskBox.style.display = 'none';
+                    resultBox.style.display = 'none';
+
+                    analyzeBtn.style.display = 'inline-block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form Submit
+        document.getElementById('upload-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            const originalBtnText = analyzeBtn.textContent;
+            analyzeBtn.textContent = 'Procesando...';
+            analyzeBtn.disabled = true;
+            resultBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/predict_tumor', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                resultBox.style.display = 'block';
+                resultBox.textContent = data.prediction_text; // Backend should send Spanish text
+
+                if (data.class_id === 1) {
+                    resultBox.className = 'result-box has-tumor';
+                } else {
+                    resultBox.className = 'result-box no-tumor';
+                }
+
+                if (data.mask_image) {
+                    const maskSrc = 'data:image/png;base64,' + data.mask_image;
+                    maskImage.src = maskSrc;
+                    overlayMaskImage.src = maskSrc;
+
+                    maskBox.style.display = 'block';
+                    overlayBox.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultBox.style.display = 'block';
+                resultBox.textContent = 'Error al procesar la imagen.';
+                resultBox.className = 'result-box';
+            } finally {
+                analyzeBtn.textContent = 'Analizar Imagen';
+                analyzeBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

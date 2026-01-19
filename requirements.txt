@@ -7,3 +7,5 @@ gunicorn
 whitenoise
 joblib
 numpy
+Pillow
+dj-database-url
